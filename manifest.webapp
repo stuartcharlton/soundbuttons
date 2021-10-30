@@ -1,0 +1,10 @@
+{
+  "name": "Sound buttons",
+  "description": "Word-building game",
+  "launch_path": "/index.html",
+  "developer": {
+    "name": "Stu Charlton",
+    "url": "https://stuartcharlton.com"
+  },
+  "default_locale": "en"
+}
