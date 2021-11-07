@@ -3,39 +3,27 @@
 With apologies to MDN's Chris Mills, whose speak easy synthesis demo I have hacked 
 
 Todo/idea list:
-- Why are different voices offered on iPad
-- disable iOS autocomplete?
-- Add ability to control number of buttons
-–- Use basic JS concepts like arrays & loops where needed :)
-- 2nd sound doesn't fire if clicked before 1st is finished
-- Ability to hide help text
+- Why are different voices offered on iPad?
+–– oh: https://talkrapp.com/speechSynthesis.html :-/
+
 - Set cookie for voice pref 
-- Trigger speak() when rate and pitch change to make it quicker to test
+- 2nd sound doesn't fire if clicked before 1st is finished
+- Make it easier to test
+–– Add test links next to inputs
+–– Trigger speak() when rate and pitch change 
 - Analytics to log morphemes?
 - Sharable URLs with presets (yeah)
-- toggle back to intro view when all inputs are empty
-*/ 
+- Toggle back to intro view when all inputs are empty
+- Ability to hide help text
 
+*/ 
 
 //---------------------------------
 // Vars
 var synth = window.speechSynthesis;
 
 var form = document.querySelector('form');
-var intro = document.querySelector('.intro');
-
-
-// Need to create arrays from NodeLists (to call indexOf method later)
-var buttons = Array.from(document.querySelectorAll('.play'));
-var sounds = Array.from(document.querySelectorAll('.sound'));
-
-// Hopefully we can ditch the IDs
-var play1 = document.querySelector('#play-1');
-var play2 = document.querySelector('#play-2');
-var sound1 = document.querySelector('#sound-1');
-var sound2 = document.querySelector('#sound-2');
-
-
+var intro = document.querySelector('#intro');
 var display = document.querySelector('#display');
 var settings = document.querySelector('#settings');
 var voiceSelect = document.querySelector('select');
@@ -44,8 +32,13 @@ var pitchValue = document.querySelector('.pitch-value');
 var rate = document.querySelector('#rate');
 var rateValue = document.querySelector('.rate-value');
 
-var voices = [];
+// Need to create arrays from NodeLists (to call indexOf method later)
+var buttons = Array.from(document.querySelectorAll('.play'));
+var sounds = Array.from(document.querySelectorAll('.sound'));
 
+var preferedVoice = 'Google UK English Female';
+
+var voices = [];
 
 //---------------------------------
 // Enable/disable buttons
@@ -56,6 +49,7 @@ for(var i=0; i<=sounds.length; i++) {
     sounds[i].addEventListener('input', toggleButtons);
   }
 }
+
 // When text is added to an input: 
 //  enable the corresponding button and add a click handler
 // and when all text is deleted: 
@@ -75,11 +69,11 @@ function toggleButtons(){
     targetButton.setAttribute('disabled','true');
   }
 }
+
 // set class to show enabled buttons and hide disabled ones
 function appReady() {
   form.classList.add('ready');
 }
-
 
 //---------------------------------
 // Getting started
@@ -109,13 +103,10 @@ rate.onchange = function() {
   rateValue.textContent = rate.value;
 }
 
-voiceSelect.onchange = function(){
-  speak(sound1);
-}
-
 
 //---------------------------------
 // Voice list
+// https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisVoice
 
 function populateVoiceList() {
   voices = synth.getVoices().sort(function (a, b) {
@@ -124,7 +115,7 @@ function populateVoiceList() {
     else if ( aname == bname ) return 0;
     else return +1;
   });
-  var selectedIndex = voiceSelect.selectedIndex < 0 ? 0 : voiceSelect.selectedIndex;
+
   voiceSelect.innerHTML = '';
   for(i = 0; i < voices.length ; i++) {
     var option = document.createElement('option');
@@ -133,11 +124,16 @@ function populateVoiceList() {
     if(voices[i].default) {
       option.textContent += ' -- DEFAULT';
     }
-
+    if(voices[i].name == preferedVoice) {
+      var preferedVoiceIndex = i;
+    }
+    
     option.setAttribute('data-lang', voices[i].lang);
     option.setAttribute('data-name', voices[i].name);
     voiceSelect.appendChild(option);
   }
+
+  var selectedIndex = voiceSelect.selectedIndex < preferedVoiceIndex ? preferedVoiceIndex : voiceSelect.selectedIndex;
   voiceSelect.selectedIndex = selectedIndex;
 }
 
@@ -158,8 +154,6 @@ function speak(sound){
   }
 
   if (sound.value !== '') {
-    
-    // I can't explain why the new instance has to be called this
     var utterThis = new SpeechSynthesisUtterance(sound.value);
 
     var selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');

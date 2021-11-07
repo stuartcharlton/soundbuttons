@@ -22,11 +22,11 @@ a:hover {
   background-color: #f7f7f7;
   position: relative;
 }
-.intro {
+#intro {
   text-align: left;
   padding-right: 40px;
 }
-.intro h1 {
+#intro h1 {
   color: rgb(0 128 119 / 1);
   font-size: 4rem;
   padding-top: 20px;
@@ -146,7 +146,7 @@ input[type=range] {
   display: inline-block;
 }
 
-.ready .intro {
+.ready #intro {
   display: none;
 }
 
