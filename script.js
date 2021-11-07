@@ -3,12 +3,17 @@
 With apologies to MDN's Chris Mills, whose speak easy synthesis demo I have hacked 
 
 Todo/idea list:
+- Why are different voices offered on iPad
+- disable iOS autocomplete?
 - Add ability to control number of buttons
 –- Use basic JS concepts like arrays & loops where needed :)
 - 2nd sound doesn't fire if clicked before 1st is finished
 - Ability to hide help text
 - Set cookie for voice pref 
-
+- Trigger speak() when rate and pitch change to make it quicker to test
+- Analytics to log morphemes?
+- Sharable URLs with presets (yeah)
+- toggle back to intro view when all inputs are empty
 */ 
 
 
@@ -18,10 +23,17 @@ var synth = window.speechSynthesis;
 
 var form = document.querySelector('form');
 var intro = document.querySelector('.intro');
+
+
+// Need to create arrays from NodeLists (to call indexOf method later)
+var buttons = Array.from(document.querySelectorAll('.play'));
+var sounds = Array.from(document.querySelectorAll('.sound'));
+
+// Hopefully we can ditch the IDs
 var play1 = document.querySelector('#play-1');
 var play2 = document.querySelector('#play-2');
-var utterance1 = document.querySelector('#utterance-1');
-var utterance2 = document.querySelector('#utterance-2');
+var sound1 = document.querySelector('#sound-1');
+var sound2 = document.querySelector('#sound-2');
 
 
 var display = document.querySelector('#display');
@@ -34,104 +46,40 @@ var rateValue = document.querySelector('.rate-value');
 
 var voices = [];
 
-//---------------------------------
-// Voice list
-
-function populateVoiceList() {
-  voices = synth.getVoices().sort(function (a, b) {
-      const aname = a.name.toUpperCase(), bname = b.name.toUpperCase();
-      if ( aname < bname ) return -1;
-      else if ( aname == bname ) return 0;
-      else return +1;
-  });
-  var selectedIndex = voiceSelect.selectedIndex < 0 ? 0 : voiceSelect.selectedIndex;
-  voiceSelect.innerHTML = '';
-  for(i = 0; i < voices.length ; i++) {
-    var option = document.createElement('option');
-    option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
-    
-    if(voices[i].default) {
-      option.textContent += ' -- DEFAULT';
-    }
-
-    option.setAttribute('data-lang', voices[i].lang);
-    option.setAttribute('data-name', voices[i].name);
-    voiceSelect.appendChild(option);
-  }
-  voiceSelect.selectedIndex = selectedIndex;
-}
-
-populateVoiceList();
-if (speechSynthesis.onvoiceschanged !== undefined) {
-  speechSynthesis.onvoiceschanged = populateVoiceList;
-}
-
-//---------------------------------
-// Speak
-
-function speak(utterance){
-    console.log('speak ' + utterance);
-    if (synth.speaking) {
-        console.error('speechSynthesis.speaking');
-        return;
-    }
-    if (utterance.value !== '') {
-    var utterThis = new SpeechSynthesisUtterance(utterance.value);
-    utterThis.onend = function (event) {
-        console.log('SpeechSynthesisUtterance.onend');
-    }
-    utterThis.onerror = function (event) {
-        console.error('SpeechSynthesisUtterance.onerror');
-    }
-    var selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');
-    for(i = 0; i < voices.length ; i++) {
-      if(voices[i].name === selectedOption) {
-        utterThis.voice = voices[i];
-        break;
-      }
-    }
-    utterThis.pitch = pitch.value;
-    utterThis.rate = rate.value;
-    synth.speak(utterThis);
-  }
-}
-
-play1.onclick = function(event) {
-  event.preventDefault();
-  speak(utterance1);
-  // play1.blur();
-}
-play2.onclick = function(event) {
-  event.preventDefault();
-  speak(utterance2);
-  // play2.blur();
-}
 
 //---------------------------------
 // Enable/disable buttons
 
-// Check on keystroke
-utterance1.addEventListener('input', toggleButtons);
-utterance2.addEventListener('input', toggleButtons);
-
-function toggleButtons(){
-  if (utterance1.value !== '') {
-    play1.removeAttribute('disabled');
-    appReady()
-  } else {
-    play1.setAttribute('disabled','true');
-  }
-  if (utterance2.value !== '') {
-    play2.removeAttribute('disabled');
-    appReady()
-  } else {
-    play2.setAttribute('disabled','true');
+// Event handlers for text inputs (could instead use forEach?)
+for(var i=0; i<=sounds.length; i++) {
+  if (typeof sounds[i] != 'undefined') {
+    sounds[i].addEventListener('input', toggleButtons);
   }
 }
-
+// When text is added to an input: 
+//  enable the corresponding button and add a click handler
+// and when all text is deleted: 
+//  disable the corresponding button
+function toggleButtons(){
+  // find button with corresponding index in button array
+  var targetButton = buttons[sounds.indexOf(this)];
+  var targetSound = this;
+  if (this.value !== '') {
+    targetButton.removeAttribute('disabled');    
+    targetButton.onclick = function(event) {
+      event.preventDefault();
+      speak(targetSound);
+    }
+    appReady();
+  } else {
+    targetButton.setAttribute('disabled','true');
+  }
+}
+// set class to show enabled buttons and hide disabled ones
 function appReady() {
   form.classList.add('ready');
 }
+
 
 //---------------------------------
 // Getting started
@@ -162,6 +110,67 @@ rate.onchange = function() {
 }
 
 voiceSelect.onchange = function(){
-  speak(utterance1);
+  speak(sound1);
 }
 
+
+//---------------------------------
+// Voice list
+
+function populateVoiceList() {
+  voices = synth.getVoices().sort(function (a, b) {
+    const aname = a.name.toUpperCase(), bname = b.name.toUpperCase();
+    if ( aname < bname ) return -1;
+    else if ( aname == bname ) return 0;
+    else return +1;
+  });
+  var selectedIndex = voiceSelect.selectedIndex < 0 ? 0 : voiceSelect.selectedIndex;
+  voiceSelect.innerHTML = '';
+  for(i = 0; i < voices.length ; i++) {
+    var option = document.createElement('option');
+    option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
+    
+    if(voices[i].default) {
+      option.textContent += ' -- DEFAULT';
+    }
+
+    option.setAttribute('data-lang', voices[i].lang);
+    option.setAttribute('data-name', voices[i].name);
+    voiceSelect.appendChild(option);
+  }
+  voiceSelect.selectedIndex = selectedIndex;
+}
+
+populateVoiceList();
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = populateVoiceList;
+}
+
+//---------------------------------
+// Speak
+
+function speak(sound){
+
+  // Use this to prevent dead clicks on other buttons
+  if (synth.speaking) {
+      console.error('speechSynthesis.speaking');
+      return;
+  }
+
+  if (sound.value !== '') {
+    
+    // I can't explain why the new instance has to be called this
+    var utterThis = new SpeechSynthesisUtterance(sound.value);
+
+    var selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');
+    for(i = 0; i < voices.length ; i++) {
+      if(voices[i].name === selectedOption) {
+        utterThis.voice = voices[i];
+        break;
+      }
+    }
+    utterThis.pitch = pitch.value;
+    utterThis.rate = rate.value;
+    synth.speak(utterThis);
+  }
+}
