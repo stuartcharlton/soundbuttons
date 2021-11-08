@@ -3,18 +3,18 @@
 With apologies to MDN's Chris Mills, whose speak easy synthesis demo I have hacked 
 
 Todo/idea list:
-- Why are different voices offered on iPad?
-–– oh: https://talkrapp.com/speechSynthesis.html :-/
-
 - Set cookie for voice pref 
-- 2nd sound doesn't fire if clicked before 1st is finished
+- Handle latency
+–– 2nd sound doesn't fire if clicked before 1st is finished
+–– Google (remote) voices seem less responsive
 - Make it easier to test
 –– Add test links next to inputs
 –– Trigger speak() when rate and pitch change 
+
+One day
 - Analytics to log morphemes?
 - Sharable URLs with presets (yeah)
 - Toggle back to intro view when all inputs are empty
-- Ability to hide help text
 
 */ 
 
